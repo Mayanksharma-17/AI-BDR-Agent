@@ -1,0 +1,12 @@
+# credentials and secrets
+*.json.key
+service-account*.json
+.env
+.env.*
+
+# n8n local data
+.n8n/
+
+# OS
+.DS_Store
+Thumbs.db

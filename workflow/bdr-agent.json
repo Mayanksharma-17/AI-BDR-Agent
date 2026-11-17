@@ -1,0 +1,376 @@
+{
+  "name": "BDR-Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "112aedc5-7b2a-4fc2-bb96-70df37f28171",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "1sBSif7cCdlA9aGAEAxWF9WONOyO2d1Ae3cGABfUUoiE",
+          "mode": "list",
+          "cachedResultName": "BDR",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sBSif7cCdlA9aGAEAxWF9WONOyO2d1Ae3cGABfUUoiE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sBSif7cCdlA9aGAEAxWF9WONOyO2d1Ae3cGABfUUoiE/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "="
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "8b96e23d-c300-4a62-be46-f6f671912b04",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "nSmZnN8fQ1wxawf6",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "domain": "={{ $json[\"Company Name\"].toLowerCase() }}.com",
+        "limit": 1,
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.hunter",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "ab5fbc9b-3acd-455f-a524-e8d089b71f07",
+      "name": "Hunter",
+      "credentials": {
+        "hunterApi": {
+          "id": "XS4RcLUA1KdOAFFb",
+          "name": "Hunter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Write a concise 3-line outreach pitch for GoPratle (a platform that connects event hosts with vetted planners, DJs, and crew) targeting {{ $('Hunter').item.json.first_name }} {{ \n    $('Hunter').item.json.last_name }}, {{ $('Hunter').item.json.position }} at {{ $('Get row(s) in sheet').item.json['Company Name'] }}.\n  \n    Rules: \n    - Maximum 60 words\n    - No greeting, no sign-off, no \"Best\", no \"Your Name\" \n    - Output ONLY the pitch body"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "f447ab7a-539b-417b-8ca2-466a7c5a827b",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IHHntnBeZ2eGDtNI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1sBSif7cCdlA9aGAEAxWF9WONOyO2d1Ae3cGABfUUoiE",
+          "mode": "list",
+          "cachedResultName": "BDR",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sBSif7cCdlA9aGAEAxWF9WONOyO2d1Ae3cGABfUUoiE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sBSif7cCdlA9aGAEAxWF9WONOyO2d1Ae3cGABfUUoiE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company Name": "={{ $('Get row(s) in sheet').item.json['Company Name'] }}",
+            "City": "={{ $('Get row(s) in sheet').item.json['City'] }}",
+            "Contact Name": "={{ $('Hunter').item.json.first_name }} {{ $('Hunter').item.json.last_name }}",
+            "Title": "={{ $('Hunter').item.json.position }}",
+            "Email": "={{ $('Hunter').item.json.value }}",
+            "Pitch": "={{ $('Message a model').item.json.content.parts[0].text }}",
+            "Status": "=Email Sent",
+            "LinkedIn": "={{ $('Hunter').item.json.linkedin }}",
+            "Phone": "={{ $('Hunter').item.json.phone_number }}",
+            "FollowUp-Date": "={{ $now.plus({days: 2}).toFormat('yyyy-MM-dd') }}",
+            "TimeStamp": "={{ $now.toFormat('yyyy-MM-dd HH:mm') }}"
+          },
+          "matchingColumns": [
+            "Company Name"
+          ],
+          "schema": [
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "City",
+              "displayName": "City",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Contact Name",
+              "displayName": "Contact Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Pitch",
+              "displayName": "Pitch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "LinkedIn",
+              "displayName": "LinkedIn",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FollowUp-Date",
+              "displayName": "FollowUp-Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TimeStamp",
+              "displayName": "TimeStamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        976,
+        0
+      ],
+      "id": "bbef471a-4410-4775-aced-365123e31bc5",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "nSmZnN8fQ1wxawf6",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6306488435",
+        "text": "=BDR Agent — Lead Report\n  \n    A new lead has been identified and processed automatically.\n  \n    Company: {{ $('Get row(s) in sheet').item.json['Company Name'] }}\n    City: {{ $('Get row(s) in sheet').item.json['City'] }}\n  \n    Contact Identified:\n    Name: {{ $('Hunter').item.json.first_name }} {{ $('Hunter').item.json.last_name }}\n    Title: {{ $('Hunter').item.json.position }}\n    Email: {{ $('Hunter').item.json.value }}\n  \n    Outreach Status: Email Sent\n  \n    Pitch Delivered:\n    {{ $('Message a model').item.json.content.parts[0].text }}\n        \n    ---\n    GoPratle AI BDR Agent\n    Automated outreach system powered by n8n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "af06f7fd-8cf1-4f07-9d36-5fdc794d5948",
+      "name": "Send a text message",
+      "webhookId": "89667e1f-754a-4037-bef1-0a5dfd0f2c1d",
+      "credentials": {
+        "telegramApi": {
+          "id": "OeUOtSqP5aSNVRur",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Hunter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hunter": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ce8e4b6e-80f2-46be-842a-724141c4b2ea",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1299ffe255892b2003c59ea14e1cdc59e6415b72a4010feab98c8c94f0592b76"
+  },
+  "id": "wBaE0jiiPeYMKcvs",
+  "tags": []
+}
