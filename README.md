@@ -1,6 +1,10 @@
 # AI BDR Agent
 
-<video src="https://raw.githubusercontent.com/Mayanksharma-17/AI-BDR-Agent/main/demo.mp4" controls width="100%"></video>
+
+
+https://github.com/user-attachments/assets/45829e91-c864-4724-ad43-87bfe0ba8229
+
+
 
 An automated Business Development Representative pipeline built on n8n. Given a list of company names in a Google Sheet, the agent finds the top contact at each company via Hunter.io, generates a personalized outreach pitch using Gemini AI, writes the results back to the sheet, and sends a Telegram notification — all without manual intervention.
 
